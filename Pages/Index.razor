@@ -1,4 +1,39 @@
 ﻿@page "/"
 
-<h1>Wanna play a game?</h1>
+<p>Wanna play a game?</p>
+<p>
+    <input @bind="GuessAsString" placeholder="Enter your guess here">
+</p>
+<p>
+    <button @onclick="CheckGuess">Check your guess</button>
+</p>
+<p>@GuessResult</p>
 
+@code
+{
+        private const int CorrectGuess = 13;
+    
+        private string GuessAsString { get; set; }
+        private string GuessResult { get; set; }
+
+    private void CheckGuess()
+    {
+        if (!int.TryParse(GuessAsString, out var guessAsInteger))
+        {
+            GuessResult = $"Invalid number entered: @{GuessAsString}";
+            return;
+        }
+        GuessResult = guessAsInteger switch {
+            _ when guessAsInteger < CorrectGuess => "Too low!",
+            _ when guessAsInteger > CorrectGuess => "Too high!",
+            _ => "Correct!"
+            };
+        
+        // apparently the new C# 9.0 syntax is not supported in blazor
+        // GuessResult = guessAsInteger switch {
+        //     < CorrectGuess => "Too low!",
+        //     > CorrectGuess => "Too high!",
+        //     _ => "Correct!"
+        //     };
+    }
+}
