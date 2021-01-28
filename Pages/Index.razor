@@ -2,25 +2,42 @@
 
 <p>Wanna play a game?</p>
 <p>
-    <input @bind="GuessAsString" placeholder="Enter your guess here">
+    <input @bind="GuessAsString" placeholder="Enter your guess here" autofocus="true">
 </p>
 <p>
-    <button @onclick="CheckGuess">Check your guess</button>
+    <button @onclick="CheckGuess" disabled="@GameOver">Check your guess</button>
 </p>
 <p>@GuessResult</p>
+@if (GameOver)
+{
+    <div>
+        Previous attempts: @GuessAttemptsAsString
+    </div>
+    <br>
+    <p>
+        <button @onclick="Reset">Play again</button>
+    </p>
+}
 
 @code
 {
-        private const int CorrectGuess = 13;
-    
-        private string GuessAsString { get; set; }
-        private string GuessResult { get; set; }
+    private bool GameOver { get; set; }
+    private const int CorrectGuess = 13;
+    private string GuessAsString { get; set; }
+    private string GuessResult { get; set; }
+    private readonly List<int> _guessAttempts = new();
+    private string GuessAttemptsAsString => string.Join(", ", _guessAttempts);
 
     private void CheckGuess()
     {
+        if (string.IsNullOrWhiteSpace(GuessAsString))
+        {
+            GuessResult = "Empty number entered";
+            return;
+        }
         if (!int.TryParse(GuessAsString, out var guessAsInteger))
         {
-            GuessResult = $"Invalid number entered: @{GuessAsString}";
+            GuessResult = $"Invalid number entered: {GuessAsString}";
             return;
         }
         GuessResult = guessAsInteger switch {
@@ -28,12 +45,24 @@
             _ when guessAsInteger > CorrectGuess => "Too high!",
             _ => "Correct!"
             };
-        
-        // apparently the new C# 9.0 syntax is not supported in blazor
-        // GuessResult = guessAsInteger switch {
-        //     < CorrectGuess => "Too low!",
-        //     > CorrectGuess => "Too high!",
-        //     _ => "Correct!"
-        //     };
+        _guessAttempts.Add(guessAsInteger);
+
+        if (GuessResult.Contains("Correct", StringComparison.OrdinalIgnoreCase))
+            GameOver = true;
+
+    // apparently the new C# 9.0 syntax is not supported in blazor
+    // GuessResult = guessAsInteger switch {
+    //     < CorrectGuess => "Too low!",
+    //     > CorrectGuess => "Too high!",
+    //     _ => "Correct!"
+    //     };
+    }
+
+    private void Reset()
+    {
+        GameOver = false;
+        GuessResult = string.Empty;
+        GuessAsString = string.Empty;
+        _guessAttempts.Clear();
     }
 }
